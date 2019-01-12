@@ -7,7 +7,7 @@ A very simple tool that parses hosts files into a SQLite 3 database
 ```
 hostsdb <hosts-file> <hosts-file>...
 ```
-The resulting database file is called `hosts.sqlite3`.
+The resulting database file is called `hosts.sqlite3` and contains a single table called `rules` with two columns called `ip_address` and `host_name`.
 
 ## Example:
 ```
@@ -17,6 +17,11 @@ hostsdb /etc/hosts ~/hosts.txt
 ## Installation
 You need GCC and SQLite 3 in your standard path. (On Arch Linux you can install it with `# pacman -Syu gcc sqlite`)
 Then clone this repository and run `make`. That's it!
+
+## Convert the database back to a hosts file:
+```
+sqlite3 hosts.sqlite3 "SELECT ip_address || CHAR(9) || host_name FROM rules ORDER BY host_name;" | expand -t 24 > hosts
+```
 
 ## Other examples:
 ```
