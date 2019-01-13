@@ -50,6 +50,7 @@ int parse_hosts_file(const char *path) {
 	char host_name[MAX_HOST_NAME_LENGTH];
 
 	while ((read = getline(&line, &len, fp)) != -1) {
+		// Ignore empty lines
 		if (read == 0 ||
 		   (read == 1 && line[0] == '\n') ||
 		   (read == 1 && line[0] == '\r') ||
@@ -61,18 +62,28 @@ int parse_hosts_file(const char *path) {
 		if (line[0] == '#') {
 			continue;
 		}
+		
+		ssize_t l = 0, r = 0;
+		
+		// Remove possible comment
+		char *p = strchr(line, '#');
+		if (p != NULL) {
+			*p = '\0';
+			r = p - line - 1;
+		} else {
+			r = read - 1;
+		}
 
 		// Find whitespace offsets
-		ssize_t l = 0, r = read - 1;
-		while (isspace(line[l])) l++;
-		while (isspace(line[r])) r--;
+		while (line[l] && isspace(line[l])) l++;
+		while (line[r] && isspace(line[r])) r--;
 		if (l > r) {
 			continue;
 		}
 
 		// Get the IP address
 		ssize_t n = 0;
-		while (l <= r && (isxdigit(line[l]) || line[l] == '.' || line[l] == ':')) {
+		while (l <= r && (line[l] == '.' || line[l] == ':' || isxdigit(line[l]))) {
 			ip_address[n++] = line[l++];
 		}
 		ip_address[n] = '\0';
@@ -93,18 +104,14 @@ int parse_hosts_file(const char *path) {
 			// Skip whitespace
 			while (l <= r && isspace(line[l])) l++;
 
-			// Stop at comments
-			if (line[l] == '#') break;
-
 			ssize_t j = 0;
 			while (l <= r && !isspace(line[l])) {
 				host_name[j++] = line[l++];
 			}
 			host_name[j] = '\0';
-
-			// Remove possible comment
-			char *p = strchr(host_name, '#');
-			if (p != NULL) *p = '\0';
+			if (strlen(host_name) == 0) {
+				continue;
+			}
 
 			rc = sqlite3_bind_text(stmt, 2, host_name, -1, SQLITE_TRANSIENT);
 			if (rc == SQLITE_OK) {
