@@ -23,6 +23,11 @@ Then clone this repository and run `make`. That's it!
 sqlite3 hosts.sqlite3 "SELECT ip_address || CHAR(9) || host_name FROM rules ORDER BY host_name;" | expand -t 24 > hosts
 ```
 
+## Convert the database to a domain name list:
+```
+sqlite3 hosts.sqlite3 "SELECT DISTINCT host_name FROM rules ORDER BY host_name;" > domains
+```
+
 ## Other examples:
 ```
 # Get all .org domains in the db (1 per line)
