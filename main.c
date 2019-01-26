@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdbool.h>
 
 #include <sqlite3.h>
 
@@ -147,44 +146,45 @@ int parse_hosts_file(const char *path) {
 }
 
 int main(const int argc, const char **argv) {
-	if (argc == 1) {
-		printf("Usage: %s <hosts-file> <hosts-file>...\n", argv[0]);
-		printf("Example: %s /etc/hosts\n", argv[0]);
-		return 0;
+	char *hosts_file = NULL;
+
+	if (argc == 2) {
+		hosts_file = (char *) *(argv + 1);
+	} else {
+		puts("Invalid number of arguments!");
+		if (argc == 1) {
+			printf("Usage: %s <hosts-file>\nExample: %s /etc/hosts\n", argv[0], argv[0]);
+		}
+		return 1;
 	}
+
+	puts("Parsing:");
+	puts(hosts_file);
 
 	int rc = sqlite3_open(DATABASE_PATH, &db);
 	if (rc != SQLITE_OK) {
-		remove(DATABASE_PATH);
+		puts("Failed to open or create the database!");
 		return 1;
 	}
 
 	if (sqlite3_exec(db, CREATE_STMT, NULL, NULL, NULL) != SQLITE_OK) {
 		sqlite3_close(db);
-		remove(DATABASE_PATH);
+		puts("Failed to create the rules table!");
 		return 1;
 	}
 
-	char *arg;
-	for (int i = 1; i < argc; ++i) {
-		arg = (char *) *(argv + i);
-		printf("Parsing %s ... ", arg);
-		if (parse_hosts_file(arg) != 0) {
-			sqlite3_close(db);
-			remove(DATABASE_PATH);
-			puts("Failed!");
-			return 1;
-		}
-		puts("Done!");
+	if (parse_hosts_file(hosts_file) != 0) {
+		sqlite3_close(db);
+		puts("Failed to parse the hosts file!");
+		return 1;
 	}
 
 	if(sqlite3_close(db) != SQLITE_OK) {
-		remove(DATABASE_PATH);
-		puts("Error!");
+		puts("Failed to close the database!");
 		return 1;
 	}
 
-	puts("All done!");
+	puts("Sucessfully parsed the hosts file!");
 
 	return 0;
 }

@@ -1,17 +1,17 @@
 # hostsdb
-A very simple tool that parses hosts files into a SQLite 3 database
+A very simple tool that parses a single hosts file into a SQLite 3 database
 
 (Works only on Linux!)
 
 ## Usage:
 ```
-hostsdb <hosts-file> <hosts-file>...
+hostsdb <hosts-file>
 ```
 The resulting database file is called `hosts.sqlite3` and contains a single table called `rules` with two columns called `ip_address` and `host_name`.
 
 ## Example:
 ```
-hostsdb /etc/hosts ~/hosts.txt
+hostsdb /etc/hosts
 ```
 
 ## Installation
@@ -31,3 +31,4 @@ sqlite3 hosts.sqlite3 "SELECT DISTINCT host_name FROM rules WHERE host_name LIKE
 # Count the number of .gov domains in the db
 sqlite3 hosts.sqlite3 "SELECT DISTINCT COUNT(1) FROM rules WHERE host_name LIKE '%.gov';"
 ```
+
